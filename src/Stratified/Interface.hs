@@ -17,7 +17,15 @@ display (Menu prompt actions errorPage) = do
 
 display (Input prompts handler page) = do
   state <- get
-  responses <- mapM ((\p -> do liftIO (putStr p); liftIO (hFlush stdout); liftIO getLine) . fst . flip runState state) prompts
+  let evaledPrompts = map (\(p,r) -> (fst $ runState p state, r)) prompts
+      repl pt@(p,t) = do
+        liftIO (putStr p)
+        liftIO (hFlush stdout)
+        ui <- liftIO getLine
+        case t ui of
+          Just r -> return r
+          _ -> repl pt
+  responses <- mapM repl evaledPrompts
   handler responses
   display page
 
@@ -28,6 +36,6 @@ display (Response pageText page) = do
 
 display (Help page@(Menu _ actions _)) = do
   let commandHelp (command,(helpText,_)) = command ++ "\t" ++ helpText
-  display $ Response (litState $ unlines $ map commandHelp actions) page
+  display $ Response (liftState $ unlines $ map commandHelp actions) page
 
 display Quit = return ()

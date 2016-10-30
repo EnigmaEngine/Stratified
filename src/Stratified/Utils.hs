@@ -2,20 +2,33 @@ module Stratified.Utils where
 import Control.Monad.State
 import Stratified.Types
 import Data.Time
-import Data.List
 
-litState :: a -> State Schedule a
-litState = state . toFunc
+liftState :: a -> State Schedule a
+liftState = state . toFunc
   where toFunc l = \s -> (l,s)
 
-instance Show Task where
-  show = showTask 0
-    where hoursAndMins = undefined
-          showTask level (Task name pleasantness due etc nibbles) =
-            let ns = map (showTask $ level + 1) nibbles
-            in intercalate "\n" $ map (replicate (4*level) ' '++)
-                 [ "Name: " ++ name
-                 , "Pleasantness: " ++ show pleasantness
-                 , "Due: " ++ formatTime defaultTimeLocale "%A, %-I:%M%P %-m/%-d/%-y" due
-                 , "Estimated Time: " ++ (show $ round $ toRational etc)
-                 ] ++ if (not $ null ns) then ["Nibbles: "] ++ ns else []
+isString str = if (not $ null str)
+               then Just str
+               else Nothing
+
+isPleasantness str = case (reads str :: [(Pleasantness,String)]) of
+                 [(x, "")] -> if -2 <= x && x <= 2
+                                then Just str
+                                else Nothing
+                 _ -> Nothing
+
+isInt str = case (reads str :: [(Int,String)]) of
+            [(x, "")] -> Just str
+            _ -> Nothing
+
+isDate str = case (parseTimeM True defaultTimeLocale "%-m/%-d/%0Y" str) :: Maybe ZonedTime of
+             Just _ -> Just str
+             _ -> Nothing
+
+isTime str = case (parseTimeM True defaultTimeLocale "%-I:%M" str) :: Maybe ZonedTime of
+             Just _ -> Just str
+             _ -> Nothing
+
+isMeridiem str = case (parseTimeM True defaultTimeLocale "%p" str) :: Maybe ZonedTime of
+                 Just _ -> Just str
+                 _ -> Nothing
