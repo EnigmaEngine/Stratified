@@ -56,14 +56,8 @@ executable Stratified
                      , Stratified.Types
                      , Stratified.Utils
 
-  -- LANGUAGE extensions used by modules in this package.
-  extensions:          TypeSynonymInstances
-                     , FlexibleInstances
-                     , TemplateHaskell
-
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.8 && <5.0
-                     , template-haskell
                      , mtl
                      , time
 
